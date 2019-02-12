@@ -8,6 +8,8 @@ var MemoryGame = MemoryGame || {};
 /**
  * Constructora de MemoryGame
  */
+
+ let animation = false;
 MemoryGame = function(gs) {
   this.graphics    = gs;
   this.state       = "";
@@ -17,6 +19,8 @@ MemoryGame = function(gs) {
 
   this.first_card  = -1;
   this.second_card = -1;
+
+  this.game_title = "Memory Game";
 
   let self = this;
   this.initGame = function(){
@@ -37,43 +41,49 @@ MemoryGame = function(gs) {
   };
 
   this.onClick = function(e){
-    // If not out of index.
-    if(e < 0 || e > 15) return;
+    // If not out of index
+    if(e == null || e < 0 || e > 15 || animation || this.cards[e].flip) return;
 
-    // Check if animations did finish
-    if((this.first_card >= 0 && !this.cards[this.first_card].isflip()) ||
-       (this.second_card >= 0 && !this.cards[this.second_card].isflip())) return;
+		if(this.first_card < 0){
+			this.first_card = e;
+      self.cards[e].time = 1.0;
+		}else if(this.second_card < 0 && this.first_card !== e){
+			this.second_card = e;
+      self.cards[e].time = 1.0;
+		}
 
-    if(this.first_card > 0 && this.second_card > 0){
-      this.first_card  = -1;
-      this.second_card = -1;
-    }
-
-    if(this.first_card < 0){
-      this.first_card = e;
-    }else{
-      this.second_card = e;
-    }
-
-    if(this.first_card > 0 && this.second_card > 0){
-      if(this.first_card === this.second_card){
-        this.cards[this.second_card].flip = true;
-        this.cards[this.first_card].flip = true;
-      }else{
-        this.cards[this.first_card].time = 1.0;
-        this.cards[this.second_card].time = 1.0;
-      }
-    }
+		if(this.first_card >= 0 && this.second_card >= 0){
+      animation = true;
+      setTimeout(function(){
+        animation = false;
+        console.log(self.cards[self.first_card].sprite, self.cards[self.second_card].sprite);
+  			if(self.cards[self.first_card].compare(self.cards[self.second_card])){
+  				self.cards[self.first_card].flip = true;
+  				self.cards[self.second_card].flip = true;
+          self.total_flip += 2;
+          self.game_title = "Match Found!!";
+          if(self.total_flip == self.cards.length){
+            self.game_title = "You Win!";
+          }
+  			}else{
+          self.game_title = "Try Again";
+        }
+  			self.first_card = -1;
+  			self.second_card = -1;
+      }, 800);
+		}
 
   };
 
   this.draw = function(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    self.graphics.drawMessage(self.game_title);
+
     for(let j = 0; j < 4; ++j){
       for(let i = 0; i < 4; ++i){
         let id = i + j * 4;
-        self.cards[id].draw(self.graphics, id, self.first_card, self.second_card);
+        self.cards[id].draw(self.graphics, self.first_card, self.second_card);
       }
     }
   };
@@ -94,19 +104,20 @@ MemoryGameCard = function(id, ix) {
   this.index  = ix;
   this.time   = 1.0;
 
-  this.isflip = function(){ return (this.time == -1.0 || this.flip); };
-
   let self = this;
-  this.draw = function(gfx, id, first, second) {
+  this.draw = function(gfx, first, second) {
 
-    if(first == this.index || second == this.index){
-      this.time = Math.max(-1.0, this.time - 0.1);
-    }
 
-    if(this.time >= 0.0){
-      gfx.draw("back", id, this.time);
+    if(this.flip || first == this.index || second == this.index){
+      this.time = Math.max(0.0, this.time - 0.1);
+      if(this.time >= 0.5){
+        gfx.draw("back", this.index, this.time);
+      }else{
+        gfx.draw(self.sprite, this.index, 1.0 - this.time);
+      }
+
     }else{
-      gfx.draw(self.sprite, id, -this.time);
+      gfx.draw("back", this.index, 1.0);
     }
   };
 
