@@ -103,18 +103,15 @@ var CustomGraphicServer = function() {
  * @param {int} height    Alto del canvas en píxeles
  * @param {string} className Nombre de clase que usaremos para el canvas
  */
-var InitCanvas = function(container, width, height, className) {
-	var containerElement = document.getElementById(container);
-	canvas = document.createElement("canvas");
+var InitCanvas = function(width, height, idCanvas) {
+		canvas = document.getElementById(idCanvas);
     // Handle error here for old browsers
     canvas.width = width;
     canvas.height = height;
-    canvas.className = className;
     ctx = canvas.getContext("2d");
     if(!ctx){
 			window.alert("Update your browser!");
     }
-    containerElement.appendChild(canvas);
     gs = new CustomGraphicServer();
 };
 
@@ -122,7 +119,7 @@ var InitCanvas = function(container, width, height, className) {
  * Función que inicia el juego. Una vez lanzada, comenzará todo el juego
  */
 function start() {
-	InitCanvas("gamecontainer", 320, 460, "canvas");
+	InitCanvas(320, 460, "game--canvas");
 	InputServer();
 	gs.load("img/sprites.png",
 		{
@@ -154,15 +151,16 @@ var InputServer = function() {
 
 	var hasTouch = false;
 	var clientToCard = function(x,y) {
-		var canvasX = (x-canvas.clientLeft)*canvas.width/canvas.clientWidth;
-		var canvasY = (y-canvas.clientTop)*canvas.height/canvas.clientHeight;
+		var bound = canvas.getBoundingClientRect();
+		var canvasX = x - bound.x;
+		var canvasY = y - bound.y;
+
 		var card = gs.resolveCard(canvasX, canvasY);
 		game.onClick(card);
 	};
 
 	var handleMouse = function(evt) {
-		if (hasTouch)
-            return;
+		if (hasTouch) return;
 		clientToCard(evt.clientX, evt.clientY);
 	};
 

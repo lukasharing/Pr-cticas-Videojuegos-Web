@@ -88,6 +88,16 @@ MemoryGame = function(gs) {
     }
   };
 
+  this.draw_menu = function(){
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.rect(0, 0, 35, 100);
+    ctx.font = "30px Lobster";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#FFF";
+    ctx.fillText("Play Game", canvas.width/2, 30);
+  };
+
 };
 
 
@@ -110,6 +120,7 @@ MemoryGameCard = function(id, ix) {
 
     if(this.flip || first == this.index || second == this.index){
       this.time = Math.max(0.0, this.time - 0.1);
+      console.log(1);
       if(this.time >= 0.5){
         gfx.draw("back", this.index, this.time);
       }else{
