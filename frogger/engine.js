@@ -1,3 +1,5 @@
+const CHUNK_AHEAD = 2;
+
 class Frogger{
 
 	constructor(callback){
@@ -16,10 +18,10 @@ class Frogger{
 
 		this.sprite_buffer = {};
 
-		this.draw = this.render_title;
+		this.draw = this.render_game;
 
 		// Entities
-		this.entities = new Array(1);
+		this.player = null;
 
 		// Map Chunk queue
 		this.chunks = new Array();
@@ -28,9 +30,9 @@ class Frogger{
 			//this.render_background();
 
 			// Add Player to the game
-			this.entities[0] = new Player(this);
-			this.camera = new Camera(this.entities[0]);
-			this.chunks[0] = new Sea(0);
+			this.player = new Player(this);
+			this.camera = new Camera(this.player);
+			this.update_chunks();
 			//this.entities[1] = new Turtle(this);
 
 			callback(this);
@@ -64,7 +66,6 @@ class Frogger{
 
 	play(time = 0.0){
 
-
 		const now = performance.now();
 		const delta = now - this.last_time;
 		if(delta >= this.max_frame){
@@ -86,14 +87,37 @@ class Frogger{
 		this.request = requestAnimationFrame((dt) => this.play(dt));
 	};
 
-	update(dt){
 
-		this.camera.update();
+	update_chunks(dt){
+		const btm = Math.floor(this.camera._p.y / (48 * 5));
+		const top = Math.floor((this.camera._p.y + this.height) / (48 * 5)) + CHUNK_AHEAD;
 
-		this.entities.forEach( e => e.update(dt) );
+		for(let i = btm; i < top; i++){
+			if(this.chunks[i] == null){
+				const rnd = Math.random();
+				let terrain = 0;
+				if(rnd < 0.5){
+					terrain = new Sea(i);
+				}else{
+					terrain = new Field(i);
+				}
+				this.chunks[i] = terrain;
+			}else{
+				this.chunks[i].update(dt);
+			}
+		}
+
 	};
 
-	render_title(dt){
+
+	update(dt){
+		this.camera.update(dt);
+		this.update_chunks(dt);
+		this.player.update(dt);
+
+	};
+
+	render_title(time){
 
 		//this.ctx.drawImage(this.map, 0, 0);
 		const logo = this.sprite_buffer["logo"];
@@ -104,21 +128,28 @@ class Frogger{
 		this.ctx.strokeStyle = "white";
 		this.ctx.save();
 			this.ctx.translate(this.width / 2, 400);
-			const anim_scl = 1.0 - Math.cos(dt / 10) / 8;
+			const anim_scl = 1.0 - Math.cos(time / 10) / 8;
 			this.ctx.scale(anim_scl, anim_scl)
 			this.ctx.fillText("Press Space to play!", 0, 0);
 			this.ctx.strokeText("Press Space to play!", 0, 0);
 		this.ctx.restore();
 
-		this.render_game();
+	};
+
+	render_chunks(time){
+		const btm = Math.floor(this.camera._p.y / (48 * 5));
+		const top = Math.floor((this.camera._p.y + this.height) / (48 * 5));
+
+		for(let i = btm; i <= top; i++){
+			this.chunks[i].draw(this.ctx);
+		}
+		this.player.draw(this.ctx);
 	};
 
 	render_game(){
-
 		this.ctx.save();
-			this.ctx.translate(this.camera.x, -this.camera.y);
-			this.chunks[0].draw(this.ctx);
-			this.entities.forEach( e => e.draw(this.ctx) );
+			this.ctx.translate(this.camera.x, this.camera.y);
+			this.render_chunks();
 		this.ctx.restore();
 	};
 

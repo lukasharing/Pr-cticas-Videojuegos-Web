@@ -1,8 +1,10 @@
 class Chunk{
-  constructor(_m, _t){
-    this.map   = _m;
-    this.tiles = _t;
+  constructor(_m, _t, _i){
+    this.map    = _m;
+    this.tiles  = _t;
     this.canvas = 0;
+    this.id     = _i;
+    this.entities = new Array();
     this.generate();
   };
 
@@ -33,7 +35,19 @@ class Chunk{
   };
 
   draw(ctx){
-    ctx.drawImage(this.canvas, 0, 0);
+    ctx.save();
+      ctx.translate(0, -(this.id + 1) * this.canvas.height);
+      ctx.drawImage(this.canvas, 0, 0);
+
+      ctx.translate(0, this.canvas.height);
+      this.entities.forEach((e) => e.draw(ctx));
+    ctx.restore();
+  };
+
+  update(dt){
+    this.entities.forEach((e) => {
+      e.update(dt);
+    });
   };
 
 };
@@ -48,7 +62,24 @@ class Sea extends Chunk{
       new Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
       new Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
       new Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-    ), game.sprite_buffer["water"]);
+    ), game.sprite_buffer["water"], id);
+
+    for(let i = 0; i <= 3; ++i){
+      const queue_timer = 50;
+      const queue_direction = Math.round(Math.random()) * 2 - 1;
+      const queue_velocity = Math.random() * 2 + 2;
+      for(let j = 0; j < 3; ++j){
+        const turtle = new Turtle();
+        turtle.set(
+          undefined,
+          48 * (i + 1)
+        );
+        turtle.setDelay(queue_timer * j);
+        turtle.setVelocity(queue_velocity);
+        turtle.setDirection(queue_direction);
+        this.entities.push(turtle);
+      }
+    }
   };
 };
 
@@ -60,8 +91,8 @@ class Field extends Chunk{
       new Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
       new Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
       new Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-    ), game.sprite_buffer["road"]);
+    ), game.sprite_buffer["road"], id);
   };
 
-  
+
 };

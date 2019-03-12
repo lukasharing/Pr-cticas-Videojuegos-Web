@@ -21,14 +21,14 @@ class Camera{
     this._f = entity;
 
     /* Camera Coordinates */
-    this._p = entity.position;
+    this._p = new Vector(game.width / 2, 0);
 
     /* Camera Velocity */
     this._v = new Vector(0, 0);
   };
 
-  get x(){ return this._p.x + game.width / 2; };
-  get y(){ return this._p.y - game.height / 2; };
+  get x(){ return this._p.x - game.width / 2; };
+  get y(){ return this._p.y + game.height; };
 
   /* Main Methods */
   restore(){
@@ -38,10 +38,15 @@ class Camera{
   };
 
   update(self){
-    this._v = this._v.scale(CAMERA_FRICTION);
-    this._p = this._p.add(this._v);
+    if(this._f.position.y > game.height / 2){
+      this._v = this._v.scale(CAMERA_FRICTION);
+      this._v.x = 0;
+      this._p.x = game.width / 2;
 
-    const df = this._f.position.subtract(this._p);
-    this._v = this._v.add(df).scale(1/3);
+      const df = this._f.position.y - (this._p.y + game.height / 2);
+      this._v.y += df;
+      this._v.y *= 1/3;
+    }
+    this._p.y = Math.max(0, this._p.y + this._v.y);
   };
 }
