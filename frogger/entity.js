@@ -4,7 +4,7 @@ const VEC_B = new Vector(+0, -1);
 const VEC_R = new Vector(+1, +0);
 
 class Entity {
-  constructor(_s, _w, _h, _t, _x, _y){
+  constructor(_s, _w, _h, _t){
 
     this.sprite = _s;
 
@@ -15,7 +15,7 @@ class Entity {
     this.current_frame  = 0;
     this.total_frames = _t;
 
-    this.position = new Vector(_x, _y);
+    this.position = new Vector(0.0, 0.0);
     this.last_position = this.position.clone();
     this.last_angle = 0;
   };
@@ -37,13 +37,14 @@ class Entity {
     this.last_position = this.position.clone();
     this.position = this.position.add(vel.scale(0.98 * dt));
 
+    if(!this.last_position.compare(this.position)){
+      this.last_angle = Math.atan2(this.velocity.x, this.velocity.y);
+    }
+
     ++this.time;
   };
 
   draw(ctx){
-    if(!this.last_position.compare(this.position)){
-      this.last_angle = Math.atan2(this.velocity.x, this.velocity.y);
-    }
 
     ctx.save();
       ctx.translate(this.position.x, -this.position.y);
@@ -110,15 +111,11 @@ class Player extends Entity{
   };
 };
 
-class Turtle extends Entity{
+class MovingEntity extends Entity{
 
-  constructor(){
-    super(
-      game.sprite_buffer["turtle"],
-      50, // Width,
-      50, // Height
-      9 // Total Frames
-    );
+  constructor(_s, _w, _h, _t){
+
+    super(_s, _w, _h, _t);
 
     this.time = Math.random() * 1000;
 
@@ -144,7 +141,7 @@ class Turtle extends Entity{
   restore(){
     const dv = (this.direction + 1) / 2;
     this.set(
-      this.last_position.x = (!dv) * (game.width + 50) + dv * (-50),
+      this.last_position.x = (!dv) * (game.width + this.width) + dv * (-this.width),
       undefined
     );
   };
@@ -153,12 +150,57 @@ class Turtle extends Entity{
     super.update(dt);
     if(this.current_delay-- < 0){
       this.position.x += this.direction * this._velocity;
-      this.current_frame = Math.floor(Math.abs(Math.sin(this.time / 50)) * this.total_frames);
-
-      if(this.position.x < -50 || this.position.x > (game.width + 50)){
+      if(this.position.x < -this.width || this.position.x > (game.width + this.width)){
         this.restore();
       }
     }
+  };
+
+  draw(ctx){
+    super.draw(ctx);
+  };
+
+};
+
+
+class Log extends MovingEntity{
+
+  constructor(n){
+    super(
+      game.sprite_buffer[`log${n}`],
+      42 * n, // Width,
+      42, // Height
+      1 // Total Frames
+    );
+  };
+
+  update(dt){
+    super.update(dt);
+
+    this.last_angle = 0.0;
+  };
+
+  draw(ctx){
+    super.draw(ctx);
+  };
+
+};
+
+
+class Turtle extends MovingEntity{
+
+  constructor(){
+    super(
+      game.sprite_buffer["turtle"],
+      50, // Width,
+      50, // Height
+      9 // Total Frames
+    );
+  };
+
+  update(dt){
+    super.update(dt);
+    this.current_frame = Math.floor(Math.abs(Math.sin(this.time / 50)) * this.total_frames);
   };
 
   draw(ctx){

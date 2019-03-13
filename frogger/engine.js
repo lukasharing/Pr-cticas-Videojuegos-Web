@@ -29,6 +29,10 @@ class Frogger{
 		this.load_sprites().then(e => {
 			//this.render_background();
 
+			this.generate_log(2);
+			this.generate_log(3);
+			this.generate_log(4);
+
 			// Add Player to the game
 			this.player = new Player(this);
 			this.camera = new Camera(this.player);
@@ -61,6 +65,7 @@ class Frogger{
 			this.load_image("logo", "./images/logo.png"),
 			this.load_image("road", "./images/road.png"),
 			this.load_image("water", "./images/water.png"),
+			this.load_image("log3", "./images/log.png"),
 		]);
 	};
 
@@ -109,6 +114,21 @@ class Frogger{
 
 	};
 
+
+	generate_log(n){
+		const log = document.createElement("canvas");
+		const ctx = log.getContext("2d");
+		log.width = 42 * n;
+		log.height = 42;
+
+		ctx.drawImage(this.sprite_buffer[`log3`], 0, 0, 42, 42, 0, 0, 42, 42);
+		for(let i = 1; i < (n - 1); ++i){
+			ctx.drawImage(this.sprite_buffer[`log3`], 42, 0, 42, 42, 42 * i, 0, 42, 42);
+		}
+		ctx.drawImage(this.sprite_buffer[`log3`], 84, 0, 42, 42, 42 * (n - 1), 0, 42, 42);
+
+		this.sprite_buffer[`log${n}`] = log;
+	};
 
 	update(dt){
 		this.camera.update(dt);
