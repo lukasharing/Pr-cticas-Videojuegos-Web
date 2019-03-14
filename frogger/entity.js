@@ -4,7 +4,7 @@ const VEC_B = new Vector(+0, -1);
 const VEC_R = new Vector(+1, +0);
 
 class Entity {
-  constructor(_s, _w, _h, _t){
+  constructor(_s, _w, _h, _t, _cw, _ch){
 
     this.sprite = _s;
 
@@ -18,11 +18,15 @@ class Entity {
     this.position = new Vector(0.0, 0.0);
     this.last_position = this.position.clone();
     this.last_angle = 0;
+	
+	// CollisionBox
+	this.collide_box = new Vector(_cw, _ch);
+	this.collidable = true;
   };
 
 
 
-  get velocity(){ return this.position.subtract(this.last_position); }
+  get velocityVector(){ return this.position.subtract(this.last_position); }
 
   get x(){ return this.position.x - game.width / 2; }
   get y(){ return -this.position.y - game.height / 2; }
@@ -33,12 +37,12 @@ class Entity {
 
   update(dt){
 
-    const vel = this.velocity;
+    const vel = this.velocityVector;
     this.last_position = this.position.clone();
     this.position = this.position.add(vel.scale(0.98 * dt));
 
     if(!this.last_position.compare(this.position)){
-      this.last_angle = Math.atan2(this.velocity.x, this.velocity.y);
+      this.last_angle = Math.atan2(this.velocityVector.x, this.velocityVector.y);
     }
 
     ++this.time;
@@ -60,7 +64,29 @@ class Entity {
         this.width,
         this.height,
       );
+	  
+	  ctx.fillStyle = "red";
+	  ctx.fillRect(-this.collide_box.x/2, -this.collide_box.y/2, this.collide_box.x, this.collide_box.y);
     ctx.restore();
+  };
+  
+  collide(e, chunk){
+	if(!this.collidable) return false;
+	
+	// AABB
+	const er = e.position.x + e.collide_box.x / 2;
+	const el = e.position.x - e.collide_box.x / 2;
+	
+	const et = e.position.y - e.collide_box.y / 2;
+	const eb = e.position.y + e.collide_box.y / 2;
+	
+	const tr = this.position.x + this.collide_box.x / 2;
+	const tl = this.position.x - this.collide_box.x / 2;
+	
+	const tt = (this.position.y + chunk.id * chunk.canvas.height) - this.collide_box.y / 2;
+	const tb = (this.position.y + chunk.id * chunk.canvas.height) + this.collide_box.y / 2;
+	
+	return (el < tr && er > tl && et < tb && eb > tt);
   };
 };
 
@@ -71,13 +97,15 @@ class Player extends Entity{
       game.sprite_buffer["player"],
       40, // Width,
       54, // Height
-      6 // Total Frames
+      6, // Total Frames
+	  10,
+	  10
     );
 
     this.set(game.width/2, 20);
   };
 
-  update(dt){
+  update(dt, chunk){
     super.update(dt);
 
     // Keys
@@ -99,13 +127,29 @@ class Player extends Entity{
 
     // Animation
     this.current_frame = 0;
-    if(this.velocity.length > 0.1){
-      this.current_frame = Math.floor(this.time * this.velocity.length / 10) % this.total_frames;
+    if(this.velocityVector.length > 0.1){
+      this.current_frame = Math.floor(this.time * this.velocityVector.length / 10) % this.total_frames;
     }
+	
+	
+	// Collision
+	let collision = false;
+	
+	for(let i = 0; i < chunk.entities.length && !collision; ++i){
+		const e = chunk.entities[i];
+		if(collision = e.collide(this, chunk)){
+			e.collision(this);
+		}
+	}
+	console.log(collision);
+	
+	if((chunk instanceof Sea && !chunk.is_safe(this) && !collision) || (chunk instanceof Field && collision)){
+		this.set(game.width/2, 20);
+	}
   };
 
   draw(ctx){
-
+	
     super.draw(ctx);
 
   };
@@ -113,9 +157,9 @@ class Player extends Entity{
 
 class MovingEntity extends Entity{
 
-  constructor(_s, _w, _h, _t){
+  constructor(_s, _w, _h, _t, _cw, _ch){
 
-    super(_s, _w, _h, _t);
+    super(_s, _w, _h, _t, _cw, _ch);
 
     this.time = Math.random() * 1000;
 
@@ -146,10 +190,12 @@ class MovingEntity extends Entity{
     );
   };
 
+  get velocity(){ return this.direction * this._velocity; };
+  
   update(dt){
     super.update(dt);
     if(this.current_delay-- < 0){
-      this.position.x += this.direction * this._velocity;
+      this.position.x += this.velocity;
       if(this.position.x < -this.width || this.position.x > (game.width + this.width)){
         this.restore();
       }
@@ -170,7 +216,9 @@ class Log extends MovingEntity{
       game.sprite_buffer[`log${n}`],
       42 * n, // Width,
       42, // Height
-      1 // Total Frames
+      1, // Total Frames
+	  42 * n, // CollisionBox Width
+	  42 // CollisionBox Height
     );
   };
 
@@ -184,6 +232,10 @@ class Log extends MovingEntity{
     super.draw(ctx);
   };
 
+  collision(e){
+	e.position.x += this.velocity;
+  };
+  
 };
 
 
@@ -194,16 +246,23 @@ class Turtle extends MovingEntity{
       game.sprite_buffer["turtle"],
       50, // Width,
       50, // Height
-      9 // Total Frames
+      9, // Total Frames
+	  50, // CollisionBox Width 
+	  50, // CollisionBox Height
     );
   };
 
   update(dt){
     super.update(dt);
     this.current_frame = Math.floor(Math.abs(Math.sin(this.time / 50)) * this.total_frames);
+	this.collidable = this.current_frame <= 6;
   };
 
   draw(ctx){
     super.draw(ctx);
+  };
+  
+  collision(e){
+	e.position.x += this.velocity;
   };
 };

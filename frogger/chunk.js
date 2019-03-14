@@ -49,6 +49,12 @@ class Chunk{
       e.update(dt);
     });
   };
+  
+  is_safe(e){
+	const dsafe = e.position.y - this.id * this.canvas.height;
+	
+	return (dsafe <= 48 || dsafe >= (this.canvas.height - 48));
+  };
 
 };
 
@@ -67,10 +73,10 @@ class Sea extends Chunk{
     for(let i = 0; i <= 3; ++i){
       const queue_timer = 50;
       const queue_direction = Math.round(Math.random()) * 2 - 1;
-      const queue_velocity = Math.random() * 2 + 2;
+      const queue_velocity = Math.random() * 2 + 1;
 
       const entity_type = Math.random();
-      if(entity_type < 0.5){
+      if(entity_type < 0.3){
         for(let j = 0; j < 3; ++j){
           const turtle = new Turtle();
           turtle.set(

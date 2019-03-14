@@ -133,10 +133,11 @@ class Frogger{
 	update(dt){
 		this.camera.update(dt);
 		this.update_chunks(dt);
-		this.player.update(dt);
-
+		
+		const chunk = this.chunks[Math.floor(this.player.position.y / (48 * 5))];
+		this.player.update(dt, chunk);
 	};
-
+	
 	render_title(time){
 
 		//this.ctx.drawImage(this.map, 0, 0);
@@ -153,7 +154,6 @@ class Frogger{
 			this.ctx.fillText("Press Space to play!", 0, 0);
 			this.ctx.strokeText("Press Space to play!", 0, 0);
 		this.ctx.restore();
-
 	};
 
 	render_chunks(time){
