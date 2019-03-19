@@ -1,5 +1,7 @@
 const CHUNK_AHEAD = 2;
 
+const fill = (char, num, string) => new Array(Math.max(0, num - string.length)).fill(char).join("") + string;
+
 class Frogger{
 
 	constructor(callback){
@@ -18,9 +20,12 @@ class Frogger{
 
 		this.sprite_buffer = {};
 
-		this.draw = this.render_game;
+		this.draw = this.render_title;
 
 		// Entities
+		this.points = 0;
+		this.anim_points = 0;
+
 		this.player = null;
 
 		// Map Chunk queue
@@ -66,6 +71,9 @@ class Frogger{
 			this.load_image("road", "./images/road.png"),
 			this.load_image("water", "./images/water.png"),
 			this.load_image("log3", "./images/log.png"),
+			this.load_image("car", "./images/cars.png"),
+			this.load_image("truck", "./images/truck.png"),
+			this.load_image("fly", "./images/fly.png"),
 		]);
 	};
 
@@ -84,7 +92,7 @@ class Frogger{
 			const dt = 1 / this.fps;
 
 			this.update(dt);
-			this.draw(this.current_frame);
+			this.draw(time);
 
 		}
 
@@ -106,6 +114,7 @@ class Frogger{
 				}else{
 					terrain = new Field(i);
 				}
+				terrain.put_flies();
 				this.chunks[i] = terrain;
 			}else{
 				this.chunks[i].update(dt);
@@ -131,13 +140,15 @@ class Frogger{
 	};
 
 	update(dt){
-		this.camera.update(dt);
 		this.update_chunks(dt);
-		
+
+		if(this.draw.name == "render_title") return;
+
+		this.camera.update(dt);
 		const chunk = this.chunks[Math.floor(this.player.position.y / (48 * 5))];
 		this.player.update(dt, chunk);
 	};
-	
+
 	render_title(time){
 
 		//this.ctx.drawImage(this.map, 0, 0);
@@ -149,11 +160,25 @@ class Frogger{
 		this.ctx.strokeStyle = "white";
 		this.ctx.save();
 			this.ctx.translate(this.width / 2, 400);
-			const anim_scl = 1.0 - Math.cos(time / 10) / 8;
+			const anim_scl = 1.0 - Math.cos(time / 200) / 8;
 			this.ctx.scale(anim_scl, anim_scl)
 			this.ctx.fillText("Press Space to play!", 0, 0);
 			this.ctx.strokeText("Press Space to play!", 0, 0);
 		this.ctx.restore();
+
+		this.ctx.font = "bold 20px Verdana";
+		this.ctx.textAlign = "center";
+		this.ctx.strokeStyle = "white";
+		this.ctx.save();
+			this.ctx.translate(this.width / 2, this.height - 20);
+			this.ctx.fillText("Game done by Lukas Haring", 0, 0);
+			this.ctx.strokeText("Game done by Lukas Haring", 0, 0);
+		this.ctx.restore();
+
+		if(this.getKey("Space")){
+			this.draw = this.render_game;
+		}
+
 	};
 
 	render_chunks(time){
@@ -167,9 +192,24 @@ class Frogger{
 	};
 
 	render_game(){
+
 		this.ctx.save();
 			this.ctx.translate(this.camera.x, this.camera.y);
 			this.render_chunks();
+		this.ctx.restore();
+
+
+		// Menu
+		this.anim_points += Math.max(0, this.points - this.anim_points) / 3;
+		const points = "Points: " + fill("0", 8, Math.round(this.anim_points).toString());
+		this.ctx.textAlign = "left";
+		this.ctx.fillStyle = "white";
+		this.ctx.strokeStyle = "black";
+		this.ctx.font = "bold 30px Arial";
+		this.ctx.save();
+			this.ctx.translate(20, 30);
+			this.ctx.fillText(points, 0, 0);
+			this.ctx.strokeText(points, 0, 0);
 		this.ctx.restore();
 	};
 

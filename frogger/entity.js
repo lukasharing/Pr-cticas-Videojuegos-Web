@@ -18,10 +18,12 @@ class Entity {
     this.position = new Vector(0.0, 0.0);
     this.last_position = this.position.clone();
     this.last_angle = 0;
-	
-	// CollisionBox
-	this.collide_box = new Vector(_cw, _ch);
-	this.collidable = true;
+
+    this.dead = false;
+
+  	// CollisionBox
+  	this.collide_box = new Vector(_cw, _ch);
+  	this.collidable = true;
   };
 
 
@@ -64,29 +66,27 @@ class Entity {
         this.width,
         this.height,
       );
-	  
-	  ctx.fillStyle = "red";
-	  ctx.fillRect(-this.collide_box.x/2, -this.collide_box.y/2, this.collide_box.x, this.collide_box.y);
+
     ctx.restore();
   };
-  
+
   collide(e, chunk){
-	if(!this.collidable) return false;
-	
-	// AABB
-	const er = e.position.x + e.collide_box.x / 2;
-	const el = e.position.x - e.collide_box.x / 2;
-	
-	const et = e.position.y - e.collide_box.y / 2;
-	const eb = e.position.y + e.collide_box.y / 2;
-	
-	const tr = this.position.x + this.collide_box.x / 2;
-	const tl = this.position.x - this.collide_box.x / 2;
-	
-	const tt = (this.position.y + chunk.id * chunk.canvas.height) - this.collide_box.y / 2;
-	const tb = (this.position.y + chunk.id * chunk.canvas.height) + this.collide_box.y / 2;
-	
-	return (el < tr && er > tl && et < tb && eb > tt);
+  	if(!this.collidable) return false;
+
+  	// AABB
+  	const er = e.position.x + e.collide_box.x / 2;
+  	const el = e.position.x - e.collide_box.x / 2;
+
+  	const et = e.position.y - e.collide_box.y / 2;
+  	const eb = e.position.y + e.collide_box.y / 2;
+
+  	const tr = this.position.x + this.collide_box.x / 2;
+  	const tl = this.position.x - this.collide_box.x / 2;
+
+  	const tt = (this.position.y + chunk.id * chunk.canvas.height) - this.collide_box.y / 2;
+  	const tb = (this.position.y + chunk.id * chunk.canvas.height) + this.collide_box.y / 2;
+
+  	return (el < tr && er > tl && et < tb && eb > tt);
   };
 };
 
@@ -98,8 +98,8 @@ class Player extends Entity{
       40, // Width,
       54, // Height
       6, // Total Frames
-	  10,
-	  10
+	    15,
+	    15
     );
 
     this.set(game.width/2, 20);
@@ -130,28 +130,78 @@ class Player extends Entity{
     if(this.velocityVector.length > 0.1){
       this.current_frame = Math.floor(this.time * this.velocityVector.length / 10) % this.total_frames;
     }
-	
-	
-	// Collision
-	let collision = false;
-	
-	for(let i = 0; i < chunk.entities.length && !collision; ++i){
-		const e = chunk.entities[i];
-		if(collision = e.collide(this, chunk)){
-			e.collision(this);
-		}
-	}
-	console.log(collision);
-	
-	if((chunk instanceof Sea && !chunk.is_safe(this) && !collision) || (chunk instanceof Field && collision)){
-		this.set(game.width/2, 20);
-	}
+
+
+  	// Collision
+  	let collision = false;
+
+  	for(let i = 0; i < chunk.entities.length; ++i){
+  		const e = chunk.entities[i];
+  		if(!e.dead && e.collide(this, chunk)){
+  			collision |= e.collision(this);
+  		}
+  	}
+
+  	if((chunk instanceof Sea && !chunk.is_safe(this) && !collision) || (chunk instanceof Field && collision)){
+  		this.set(game.width/2, 20);
+  	}
+
+
+    // Boundings
+    this.position.y = Math.max(0, this.position.y);
+    this.position.x = Math.max(0, Math.min(game.width, this.position.x));
   };
 
   draw(ctx){
-	
+
     super.draw(ctx);
 
+  };
+};
+
+class Fly extends Entity{
+
+  constructor(){
+    super(
+      game.sprite_buffer["fly"],
+      32, // Width,
+      32, // Height
+      1, // Total Frames
+	    15, // CollisionBox Width
+	    15, // CollisionBox Height
+    );
+    ++this.time;
+  };
+
+  update(dt){
+    ++this.time;
+  };
+
+  draw(ctx){
+    ctx.save();
+      const scale = 1.0 + Math.abs(Math.cos(this.time / 10) * 0.5);
+      //ctx.translate(-this.position.x, this.position.y);
+      ctx.translate(this.position.x, -this.position.y);
+      ctx.scale(scale, scale);
+      ctx.drawImage(
+        this.sprite,
+        this.current_frame * this.width,
+        0,
+        this.width,
+        this.height,
+        -this.width/2,
+        -this.height/2,
+        this.width,
+        this.height,
+      );
+
+    ctx.restore();
+  };
+
+  collision(e){
+    game.points += 100;
+    this.dead = true;
+    return false;
   };
 };
 
@@ -185,18 +235,18 @@ class MovingEntity extends Entity{
   restore(){
     const dv = (this.direction + 1) / 2;
     this.set(
-      this.last_position.x = (!dv) * (game.width + this.width) + dv * (-this.width),
+      this.last_position.x = (!dv) * (game.width + this.width/2) + dv * (-this.width/2),
       undefined
     );
   };
 
   get velocity(){ return this.direction * this._velocity; };
-  
+
   update(dt){
     super.update(dt);
-    if(this.current_delay-- < 0){
+    if(--this.current_delay < 0){
       this.position.x += this.velocity;
-      if(this.position.x < -this.width || this.position.x > (game.width + this.width)){
+      if(this.position.x < -this.width/2 || this.position.x > (game.width + this.width/2)){
         this.restore();
       }
     }
@@ -217,8 +267,8 @@ class Log extends MovingEntity{
       42 * n, // Width,
       42, // Height
       1, // Total Frames
-	  42 * n, // CollisionBox Width
-	  42 // CollisionBox Height
+  	  42 * n, // CollisionBox Width
+  	  38 // CollisionBox Height
     );
   };
 
@@ -233,9 +283,10 @@ class Log extends MovingEntity{
   };
 
   collision(e){
-	e.position.x += this.velocity;
+	   e.position.x += this.velocity;
+     return true;
   };
-  
+
 };
 
 
@@ -247,22 +298,79 @@ class Turtle extends MovingEntity{
       50, // Width,
       50, // Height
       9, // Total Frames
-	  50, // CollisionBox Width 
-	  50, // CollisionBox Height
+	    40, // CollisionBox Width
+	    40, // CollisionBox Height
     );
   };
 
   update(dt){
     super.update(dt);
     this.current_frame = Math.floor(Math.abs(Math.sin(this.time / 50)) * this.total_frames);
-	this.collidable = this.current_frame <= 6;
   };
 
   draw(ctx){
     super.draw(ctx);
   };
-  
+
   collision(e){
-	e.position.x += this.velocity;
+	   e.position.x += this.velocity;
+     return (this.current_frame <= 6);
+  };
+};
+
+class Car extends MovingEntity{
+
+  constructor(){
+    super(
+      game.sprite_buffer["car"],
+      98, // Width,
+      49, // Height
+      1, // Total Frames
+	    60, // CollisionBox Width
+	    40, // CollisionBox Height
+    );
+
+    this.current_frame = Math.floor(Math.random() * 3);
+  };
+
+  update(dt){
+    super.update(dt);
+
+    this.last_angle = (Math.sign(this.velocity) + 1) * H_PI + PI;
+  };
+
+  draw(ctx){
+    super.draw(ctx);
+  };
+
+  collision(e){
+      return true;
+  };
+};
+
+class Truck extends MovingEntity{
+
+  constructor(){
+    super(
+      game.sprite_buffer["truck"],
+      201, // Width,
+      47, // Height
+      1, // Total Frames
+	    170, // CollisionBox Width
+	    40, // CollisionBox Height
+    );
+  };
+
+  update(dt){
+    super.update(dt);
+    this.last_angle = (Math.sign(this.velocity) + 1) * H_PI + PI;
+  };
+
+  draw(ctx){
+    super.draw(ctx);
+  };
+
+  collision(e){
+    return true;
   };
 };

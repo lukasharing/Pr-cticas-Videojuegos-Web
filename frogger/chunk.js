@@ -40,7 +40,11 @@ class Chunk{
       ctx.drawImage(this.canvas, 0, 0);
 
       ctx.translate(0, this.canvas.height);
-      this.entities.forEach((e) => e.draw(ctx));
+      this.entities.forEach((e) => {
+        if(!e.dead){
+          e.draw(ctx);
+        }
+      });
     ctx.restore();
   };
 
@@ -49,13 +53,21 @@ class Chunk{
       e.update(dt);
     });
   };
-  
+
   is_safe(e){
-	const dsafe = e.position.y - this.id * this.canvas.height;
-	
-	return (dsafe <= 48 || dsafe >= (this.canvas.height - 48));
+  	const dsafe = e.position.y - this.id * this.canvas.height;
+
+  	return (dsafe <= 48 || dsafe >= (this.canvas.height - 48));
   };
 
+  put_flies(){
+    const total = 1 + Math.floor(Math.random() * 3);
+    for(let i = 0; i < total; ++i){
+      const fly = new Fly();
+      fly.set(Math.floor(Math.random() * 10 + 1) *  48, Math.floor(Math.random() * 2 + 2) *  48);
+      this.entities.push(fly);
+    }
+  };
 };
 
 
@@ -71,12 +83,12 @@ class Sea extends Chunk{
     ), game.sprite_buffer["water"], id);
 
     for(let i = 0; i <= 3; ++i){
-      const queue_timer = 50;
       const queue_direction = Math.round(Math.random()) * 2 - 1;
       const queue_velocity = Math.random() * 2 + 1;
 
       const entity_type = Math.random();
       if(entity_type < 0.3){
+        const queue_timer = 50;
         for(let j = 0; j < 3; ++j){
           const turtle = new Turtle();
           turtle.set(
@@ -89,6 +101,7 @@ class Sea extends Chunk{
           this.entities.push(turtle);
         }
       }else{
+        const queue_timer = 60;
         const log_size = Math.round(Math.random()) + 2;
         for(let j = 0; j < 5 - log_size; ++j){
           const turtle = new Log(log_size);
@@ -115,6 +128,44 @@ class Field extends Chunk{
       new Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
       new Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
     ), game.sprite_buffer["road"], id);
+
+    for(let i = 0; i <= 3; ++i){
+      const queue_direction = Math.round(Math.random()) * 2 - 1;
+      const queue_velocity = Math.random() * 2 + 2;
+
+      const entity_type = Math.random();
+
+      if(entity_type < 0.3){
+        const queue_timer = 120;
+        for(let j = 0; j < 2; ++j){
+          const truck = new Truck();
+          truck.set(
+            undefined,
+            48 * (i + 1)
+          );
+
+          truck.setDelay(queue_timer * j);
+          truck.setVelocity(queue_velocity * 1.2);
+          truck.setDirection(queue_direction);
+          this.entities.push(truck);
+
+        }
+      }else{
+        const queue_timer = 40;
+        for(let j = 0; j < 3; ++j){
+          const car = new Car();
+          car.set(
+            undefined,
+            48 * (i + 1)
+          );
+          car.setDelay(queue_timer * j);
+          car.setVelocity(queue_velocity);
+          car.setDirection(queue_direction);
+          this.entities.push(car);
+        }
+      }
+    }
+
   };
 
 
