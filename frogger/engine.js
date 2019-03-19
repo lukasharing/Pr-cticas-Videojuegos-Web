@@ -74,6 +74,11 @@ class Frogger{
 			this.load_image("car", "./images/cars.png"),
 			this.load_image("truck", "./images/truck.png"),
 			this.load_image("fly", "./images/fly.png"),
+			this.load_image("lifes", "./images/lifes.png"),
+			this.load_image("nums", "./images/nums.png"),
+			this.load_image("top-gui", "./images/top-background-gui.png"),
+			this.load_image("bgini", "./images/bg.png"),
+
 		]);
 	};
 
@@ -150,6 +155,8 @@ class Frogger{
 	};
 
 	render_title(time){
+		this.ctx.drawImage(this.sprite_buffer["bgini"], 0, 0);
+
 
 		//this.ctx.drawImage(this.map, 0, 0);
 		const logo = this.sprite_buffer["logo"];
@@ -158,6 +165,7 @@ class Frogger{
 		this.ctx.font = "bold 30px Verdana";
 		this.ctx.textAlign = "center";
 		this.ctx.strokeStyle = "white";
+		this.ctx.fillStyle = "black";
 		this.ctx.save();
 			this.ctx.translate(this.width / 2, 400);
 			const anim_scl = 1.0 - Math.cos(time / 200) / 8;
@@ -166,13 +174,12 @@ class Frogger{
 			this.ctx.strokeText("Press Space to play!", 0, 0);
 		this.ctx.restore();
 
-		this.ctx.font = "bold 20px Verdana";
+		this.ctx.font = "bold 15px Verdana";
 		this.ctx.textAlign = "center";
-		this.ctx.strokeStyle = "white";
+		this.ctx.fillStyle = "white";
 		this.ctx.save();
-			this.ctx.translate(this.width / 2, this.height - 20);
+			this.ctx.translate(this.width / 2, this.height - 10);
 			this.ctx.fillText("Game done by Lukas Haring", 0, 0);
-			this.ctx.strokeText("Game done by Lukas Haring", 0, 0);
 		this.ctx.restore();
 
 		if(this.getKey("Space")){
@@ -198,18 +205,22 @@ class Frogger{
 			this.render_chunks();
 		this.ctx.restore();
 
-
-		// Menu
-		this.anim_points += Math.max(0, this.points - this.anim_points) / 3;
-		const points = "Points: " + fill("0", 8, Math.round(this.anim_points).toString());
-		this.ctx.textAlign = "left";
-		this.ctx.fillStyle = "white";
-		this.ctx.strokeStyle = "black";
-		this.ctx.font = "bold 30px Arial";
+		// GUI
 		this.ctx.save();
+			this.ctx.drawImage(this.sprite_buffer[`top-gui`], 0, 0); // Top side
 			this.ctx.translate(20, 30);
-			this.ctx.fillText(points, 0, 0);
-			this.ctx.strokeText(points, 0, 0);
+			this.anim_points += Math.max(0, this.points - this.anim_points) / 3;
+			const num = fill("0", 8, Math.round(this.anim_points).toString());
+			for(let i = 0; i < num.length; ++i){
+					this.ctx.drawImage(this.sprite_buffer[`nums`], 25 * parseInt(num.charAt(i)), 0, 25, 32, 25 * i, -12, 25, 32);
+			}
+
+			this.ctx.save();
+				this.ctx.translate(300, 0);
+				for(let i = 0; i < 4; ++i){
+					this.ctx.drawImage(this.sprite_buffer[`lifes`], 46 * i, 0, 46, 37, 46 * i, -18, 46, 37);
+				}
+			this.ctx.restore();
 		this.ctx.restore();
 	};
 

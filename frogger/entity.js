@@ -134,18 +134,16 @@ class Player extends Entity{
 
   	// Collision
   	let collision = false;
-
   	for(let i = 0; i < chunk.entities.length; ++i){
   		const e = chunk.entities[i];
   		if(!e.dead && e.collide(this, chunk)){
-  			collision |= e.collision(this);
+  			collision |= e.collision(this, collision);
   		}
   	}
 
   	if((chunk instanceof Sea && !chunk.is_safe(this) && !collision) || (chunk instanceof Field && collision)){
   		this.set(game.width/2, 20);
   	}
-
 
     // Boundings
     this.position.y = Math.max(0, this.position.y);
@@ -164,17 +162,19 @@ class Fly extends Entity{
   constructor(){
     super(
       game.sprite_buffer["fly"],
-      32, // Width,
+      43, // Width,
       32, // Height
-      1, // Total Frames
+      2, // Total Frames
 	    15, // CollisionBox Width
 	    15, // CollisionBox Height
     );
-    ++this.time;
+    this.time = Math.random() * 100;
   };
 
   update(dt){
     ++this.time;
+
+    this.current_frame = (this.time >> 3) % this.total_frames;
   };
 
   draw(ctx){
@@ -282,9 +282,11 @@ class Log extends MovingEntity{
     super.draw(ctx);
   };
 
-  collision(e){
-	   e.position.x += this.velocity;
-     return true;
+  collision(e, last_collide){
+    if(!last_collide){
+      e.position.x += this.velocity;
+    }
+    return true;
   };
 
 };
@@ -312,9 +314,12 @@ class Turtle extends MovingEntity{
     super.draw(ctx);
   };
 
-  collision(e){
-	   e.position.x += this.velocity;
-     return (this.current_frame <= 6);
+  collision(e, last_collide){
+    if(!last_collide){
+      e.position.x += this.velocity;
+    }
+
+    return (this.current_frame <= 7);
   };
 };
 

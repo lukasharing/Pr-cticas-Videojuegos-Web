@@ -101,7 +101,7 @@ class Sea extends Chunk{
           this.entities.push(turtle);
         }
       }else{
-        const queue_timer = 60;
+        const queue_timer = 80;
         const log_size = Math.round(Math.random()) + 2;
         for(let j = 0; j < 5 - log_size; ++j){
           const turtle = new Log(log_size);
@@ -109,7 +109,7 @@ class Sea extends Chunk{
             undefined,
             48 * (i + 1)
           );
-          turtle.setDelay((queue_timer + 20) * j);
+          turtle.setDelay(queue_timer * j);
           turtle.setVelocity(queue_velocity);
           turtle.setDirection(queue_direction);
           this.entities.push(turtle);
@@ -135,7 +135,7 @@ class Field extends Chunk{
 
       const entity_type = Math.random();
 
-      if(entity_type < 0.3){
+      if(entity_type < 0.5){
         const queue_timer = 120;
         for(let j = 0; j < 2; ++j){
           const truck = new Truck();
