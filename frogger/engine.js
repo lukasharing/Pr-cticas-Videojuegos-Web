@@ -174,13 +174,7 @@ class Frogger{
 			this.ctx.strokeText("Press Space to play!", 0, 0);
 		this.ctx.restore();
 
-		this.ctx.font = "bold 15px Verdana";
-		this.ctx.textAlign = "center";
-		this.ctx.fillStyle = "white";
-		this.ctx.save();
-			this.ctx.translate(this.width / 2, this.height - 10);
-			this.ctx.fillText("Game done by Lukas Haring", 0, 0);
-		this.ctx.restore();
+		this.render_footer();
 
 		if(this.getKey("Space")){
 			this.draw = this.render_game;
@@ -198,7 +192,7 @@ class Frogger{
 		this.player.draw(this.ctx);
 	};
 
-	render_game(){
+	render_game(time){
 
 		this.ctx.save();
 			this.ctx.translate(this.camera.x, this.camera.y);
@@ -217,11 +211,55 @@ class Frogger{
 
 			this.ctx.save();
 				this.ctx.translate(300, 0);
-				for(let i = 0; i < 4; ++i){
+				for(let i = 0; i < this.player.lifes; ++i){
 					this.ctx.drawImage(this.sprite_buffer[`lifes`], 46 * i, 0, 46, 37, 46 * i, -18, 46, 37);
 				}
 			this.ctx.restore();
 		this.ctx.restore();
+	};
+	
+	render_end(time){
+		this.ctx.drawImage(this.sprite_buffer["bgini"], 0, 0);
+		const logo = this.sprite_buffer["logo"];
+		this.ctx.drawImage(logo, (this.width - logo.width) / 2, 150);
+		
+		
+		this.ctx.textAlign = "center";
+		this.ctx.save();
+			this.render_text("Oops! You Loose", 38, this.width / 2, 400, "black", "white");
+			this.render_text("You got an score of", 20,  0, 40, "black", "white");
+			
+			this.ctx.translate(0, 100);
+			this.ctx.font = "bold 50px Verdana";
+			this.ctx.fillStyle = "white";
+			this.ctx.strokeStyle = "black";
+			const text3 = `${game.points} points`;
+			const anim_scl = 1.0 - Math.cos(time / 200) / 8;
+			this.ctx.scale(anim_scl, anim_scl);
+			this.ctx.fillText(text3, 0, 0);
+			this.ctx.strokeText(text3, 0, 0);
+			
+			
+		this.ctx.restore();
+		
+		this.render_footer();
+	};
+	
+	render_footer(){
+		this.ctx.save();
+			this.render_text("Game done by Lukas Haring", 15,  this.width / 2, this.height - 10, "white", "black");
+		this.ctx.restore();
+	};
+	
+	render_text(text, size, x, y, fill, stroke){
+		this.ctx.font = `bold ${size}px Verdana`;
+		this.ctx.textAlign = "center";
+		
+		this.ctx.fillStyle = fill;
+		this.ctx.strokeStyle = stroke;
+		this.ctx.translate(x, y);
+		this.ctx.strokeText(text, 0, 0);
+		this.ctx.fillText(text, 0, 0);
 	};
 
 };

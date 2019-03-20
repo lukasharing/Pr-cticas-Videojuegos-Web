@@ -102,7 +102,12 @@ class Player extends Entity{
 	    15
     );
 
+	this.lifes = 4;
     this.set(game.width/2, 20);
+	this.invincible = 0;
+	
+	
+	this.max_chunk = 0;
   };
 
   update(dt, chunk){
@@ -141,19 +146,35 @@ class Player extends Entity{
   		}
   	}
 
-  	if((chunk instanceof Sea && !chunk.is_safe(this) && !collision) || (chunk instanceof Field && collision)){
-  		this.set(game.width/2, 20);
+	--this.invincible;
+  	if(this.invincible < 0 && ((chunk instanceof Sea && !chunk.is_safe(this) && !collision) || (chunk instanceof Field && collision))){
+  		this.collide();
   	}
 
     // Boundings
     this.position.y = Math.max(0, this.position.y);
     this.position.x = Math.max(0, Math.min(game.width, this.position.x));
+	
+	// Check if we go to an higher chunk
+	if(chunk.id > this.max_chunk){
+		this.max_chunk = chunk.id;
+		game.points += 1000;
+	}
   };
 
   draw(ctx){
 
-    super.draw(ctx);
-
+	ctx.save();
+		ctx.globalAlpha = Math.abs(Math.cos(Math.max(0.0, this.invincible) / 2));
+		super.draw(ctx);
+	ctx.restore();
+  };
+  
+  collide(){
+	if(--this.lifes < 0){
+		game.draw = game.render_end;
+	}
+	this.invincible = 25;
   };
 };
 
