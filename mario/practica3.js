@@ -1,40 +1,112 @@
-const Q = Quintus().include("Sprites,Touch,TMX").setup({
+const Q = window.Q = Quintus().include("Sprites,Scenes,Anim,2D,TMX,Input").setup({
   width: 800, // Set the default width to 800 pixels
   height: 600, // Set the default height to 600 pixels
-  upsampleWidth: 420, // Double the pixel density of the
-  upsampleHeight: 320, // game if the w or h is 420x320
-  // or smaller (useful for retina phones)
-  downsampleWidth: 1024, // Halve the pixel density if resolution
-  downsampleHeight: 768 // is larger than or equal to 1024x768
-}).touch();
+}).controls();
 
+Q.animations("player_anim",{
+    stand: {
+      frames: [0],
+      rate: 1/5
+    },
+    run_right: {
+      frames: [1, 2, 3, 0],
+      rate: 1/15
+    },
+    jump: {
+      frames: [4],
+      rate: 1/15
+    },
+});
 
-Q.load("./data/mario_small.png, ./data/mario_small.json, ./data/level.json, ./images/tiles.png, ./images/bg.png", function() {
+Q.Sprite.extend("Player", {
+  // the init constructor is called on creation
+  init: function(p) {
+    // You can call the parent's constructor with this._super(..)
+    this._super(p, {
+      sheet: "mario", // Setting a sprite sheet sets sprite width and height
+      sprite: "player_anim",
+      x: 410, // You can also set additional properties that can
+      y: 90, // be overridden on object creation
+      jumpSpeed: -550,
+      frame: 0
+    });
+
+    this.add('2d, animation, platformerControls');
+
+    Q.input.on("fire");
+
+    this.on("fire", this, "run");
+    this.on("hit", this, "collision");
+  },
+
+  // Update
+  step: function(dt){
+
+    if(Math.abs(this.p.vy) > 0){
+      this.play("jump");
+    }else if(Math.abs(this.p.vx) > 0){
+      this.play("run_right");
+    }else{
+      this.play("stand");
+    }
+  },
+
+  // Run
+  fire: function(){
+    console.log(1);
+  },
+
+  // Render
+  draw: function(ctx){
+    ctx.save();
+      ctx.scale(-2 * (this.p.direction === "left") + 1, 1);
+      this._super(ctx);
+    ctx.restore();
+  },
+
+  collision: function(collision) {
+    //console.log(collision.obj);
+    // Check the collision, if it's the Tower, you win!
+    /*if(collision.obj.isA("Tower")) {
+      Q.stageScene("endGame",1, { label: "You Won!" });
+      this.destroy();
+    }*/
+  }
+
+});
+
+Q.load("../images/mario_small.png, ./mario_small.json, ./level.tmx", function() {
   // Sprites sheets can be created manually
-  Q.sheet("tiles","tiles.png", { tilew: 32, tileh: 32 });
-  // Or from a .json asset that defines sprite locations
-  Q.compileSheets("sprites.png","sprites.json");
+  this.compileSheets("../images/sprites.png","./sprites.json");
   // Finally, call stageScene to run the game
-  Q.stageScene("level1");
+  Q.compileSheets("../images/mario_small.png","./mario_small.json");
+
+  Q.loadTMX("./level.tmx", function() {
+    Q.stageScene("level1");
+  });
+
+
 });
 
 
+Q.scene("level1", function(stage) {
+  Q.stageTMX("./level.tmx", stage);
+  var player = stage.insert(new Q.Player());
+  console.log(stage._collisionLayers[0]);
+  stage.add("viewport").follow(player, {
+    x: true,
+    y: false
+  },
+  {
+    minX: 0,
+    maxX: 40 * 32,
+    minY: 0,
+    maxY: 100
+  });
 
-Q.scene("level1",function(stage) {
-  // Add in a repeater for a little parallax action
-  stage.insert(new Q.Repeater({ asset: "background-wall.png", speedX: 0.5, speedY: 0.5 }));
-  // Add in a tile layer, and make it the collision layer
-  stage.collisionLayer(new Q.TileLayer({
-    dataAsset: 'level.json',
-    sheet: 'tiles'
-  }));
-  // Create the player and add them to the stage
-  /*var player = stage.insert(new Q.Player());
-  // Give the stage a moveable viewport and tell it
-  // to follow the player.
-  stage.add("viewport").follow(player);
+
   // Add in a couple of enemies
-  stage.insert(new Q.Enemy({ x: 700, y: 0 }));
+  /*stage.insert(new Q.Enemy({ x: 700, y: 0 }));
   stage.insert(new Q.Enemy({ x: 800, y: 0 }));
   // Finally add in the tower goal
   stage.insert(new Q.Tower({ x: 180, y: 50 }));*/
