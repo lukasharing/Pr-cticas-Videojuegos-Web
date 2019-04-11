@@ -1,5 +1,5 @@
 // -------------------- Players ---------------------
-compiling_sheets.push({
+compiling.sheet.push({
   png_path: "../images/mario_small.png",
   json_path: "./mario_small.json"
 });
@@ -64,7 +64,7 @@ Q.Sprite.extend("Player", {
     ctx.restore();
   },
 
-  collision: function(collision) {
+  collision: function(c) {
     //console.log(collision.obj);
     // Check the collision, if it's the Tower, you win!
     /*if(collision.obj.isA("Tower")) {

@@ -1,16 +1,37 @@
-Q.load(`${[].concat.apply([], compiling_sheets.map(e => Object.values(e))).join(",")}, ./level.tmx`, function() {
-  // Sprites sheets can be created manually
-  compiling_sheets.forEach(sheet => { Q.compileSheets(sheet.png_path, sheet.json_path) });
-  // Finally, call stageScene to run the game
+// Main Game
+compiling.audio.push({
+  "main_sound": "./music_main.mp3"
+});
 
-  Q.loadTMX("./level.tmx", function() {
-    Q.stageScene("level1");
+compiling.audio.push({
+  "coin": "./coin.mp3"
+});
+
+Q.load(`${unroll(unroll(Object.values(compiling)).map(e => Object.values(e))).join(",")}, ./level.tmx`, function() {
+  // Sprites sheets can be created manually
+  compiling.sheet.forEach(sheet => { Q.compileSheets(sheet.png_path, sheet.json_path) });
+
+  // Audio
+  if(Q.hasWebAudio){
+    Q.audio.enableWebAudioSound();
+  }else{
+    Q.audio.enableHTML5Sound();
+  }
+  Q.load(Object.assign({}, ...compiling.audio), function(){
+    // Finally, call stageScene to run the game
+    Q.loadTMX("./level.tmx", function() {
+      //Q.audio.play("main_sound", { loop: true });
+      Q.stageScene("level1");
+    });
+
   });
 
 });
 
 
 Q.scene("level1", function(stage) {
+  // Adio
+
   Q.stageTMX("./level.tmx", stage);
 
   //stage.locate(0, 0);
@@ -22,7 +43,7 @@ Q.scene("level1", function(stage) {
     minX: 0,
     maxX: 80 * 34,
     minY: 0,
-    maxY: 100
+    maxY: 200
   });
 
 
