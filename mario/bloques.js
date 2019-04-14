@@ -1,7 +1,7 @@
 // -------------------- Blocks ---------------------
 // Coin Block
 Q.animations("block-coin",{
-    run: {
+    idle: {
       frames: [7 * 5 + 2, 7 * 4 + 2, 7 * 3 + 2],
       rate: 1/5
     },
@@ -13,16 +13,15 @@ Q.animations("block-coin",{
 Q.Sprite.extend("Bloque-Moneda", {
 
   init: function(p){
-    this._super(p,{
+    this._super(p, {
       sheet: "tiles",
       sprite: "block-coin",
-      vy: 0
+      gravity: false,
     });
 
-    this.state = "run";
-    this.dead = -10;
+    this.state = "idle";
 
-    this.add('2d, animation');
+    this.add('2d, animation, tween');
 
     this.on("bump.bottom", this, "collision");
   },
@@ -30,27 +29,16 @@ Q.Sprite.extend("Bloque-Moneda", {
   // Update
   step: function(e){
     this.play(this.state);
-
-    if(this.state === "disabled"){ this.dead += 2.0; }
-  },
-
-  // Override Falling
-  update: function(){
-    this._super();
   },
 
   collision: function(entity){
+    Q.state.inc("score", 100);
     Q.audio.play("coin");
+    /* Amimation */
+    this.animate({y: this.p.y - 20}, 0.1, Q.Easing.Quadratic.InOut).chain({y: this.p.y}, 0.1, Q.Easing.Quadratic.InOut);
+
     this.state = "disabled";
     this.debind("collision");
-  },
-
-  draw: function(ctx){
-    ctx.save();
-      let anim = 1.0 / (1.0 + this.dead * this.dead);
-      ctx.translate(0, -10 * anim);
-      this._super(ctx);
-    ctx.restore();
   },
 
 });

@@ -10,7 +10,7 @@ concerns itself with game-type (pretty anything besides touchscreen input)
 */
 
 
-var quintusInput = function(Quintus) { 
+var quintusInput = function(Quintus) {
 "use strict";
 
 /**

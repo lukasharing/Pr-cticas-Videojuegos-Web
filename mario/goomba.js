@@ -24,16 +24,13 @@ Q.Sprite.extend("Goomba-Overground", {
     this._super(p, {
       sheet: "goomba",
       sprite: "goomba_overground",
-      vx: 100
+      vx: 100,
     });
 
+    this.add('Enemy');
     this.dead_counter = DEATH_GOOMBA_ANIMATION;
     this.current_state = "run";
 
-    this.add('2d, animation, aiBounce');
-
-    //this.on("bump.left, bump.right", this, "collision");
-    this.on("bump.top", this, "kill");
   },
 
   // Update
@@ -46,13 +43,6 @@ Q.Sprite.extend("Goomba-Overground", {
       }
     }
   },
-
-  kill: function(collide){
-    if(collide.obj.isA("Player")){
-      this.current_state = "dead";
-      collide.obj.p.vy = -300;
-    }
-  }
 
 });
 

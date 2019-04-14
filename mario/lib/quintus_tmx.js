@@ -202,9 +202,10 @@ Quintus.TMX = function(Q) {
 
    var TileLayerClass = tileLayerProperties.Class || 'TileLayer';
 
-   if(tileLayerProperties['collision']) {
+   if(tileLayerProperties['collision'] === 'true') {
      stage.collisionLayer(new Q[TileLayerClass](tileLayerProperties));
    } else {
+     console.log(tileLayerProperties);
      stage.insert(new Q[TileLayerClass](tileLayerProperties));
    }
  };

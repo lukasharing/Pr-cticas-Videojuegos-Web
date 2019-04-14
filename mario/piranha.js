@@ -18,31 +18,23 @@ Q.Sprite.extend("Piranha", {
     this._super(p, {
       sheet: "piranha",
       sprite: "piranha_overground",
+      gravity: false
     });
 
-    this.add('animation');
-
-    this.p.y += 24;
+    this.add('2d, animation, tween');
 
     this.time = 0;
 
     //this.on("bump.left, bump.right", this, "collision");
-    this.on("bump", this, "kill");
+    //this.on("bump", this, "collision");
   },
 
   // Update
   step: function(dt){
     this.play("run");
-
-    this.time += dt * 48 / 10;
-    const direction = Math.sign(Math.cos(this.time));
-    this.p.y += direction;
-  },
-
-  kill: function(collide){
+    this.animate({y: this.p.y + 50}, 1.0).chain({y: this.p.y}, 1.0, {loop: true});
 
   },
-
 });
 
 

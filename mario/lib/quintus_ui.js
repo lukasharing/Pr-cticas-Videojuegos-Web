@@ -664,5 +664,3 @@ if(typeof Quintus === 'undefined') {
 } else {
   quintusUI(Quintus);
 }
-
-

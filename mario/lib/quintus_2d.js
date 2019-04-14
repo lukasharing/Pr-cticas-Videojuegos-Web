@@ -443,7 +443,7 @@ Quintus["2D"] = function(Q) {
       entity.on('hit',this,'collision');
     },
 
-    collision: function(col,last) {
+    collision: function(col, last) {
       var entity = this.entity,
           p = entity.p,
           magnitude = 0;
@@ -461,6 +461,8 @@ Quintus["2D"] = function(Q) {
       p.y -= col.separate[1];
 
       // Top collision
+      const yv = p.vy, xv = p.vx;
+
       if(col.normalY < -0.3) {
         if(!p.skipCollide && p.vy > 0) { p.vy = 0; }
         col.impact = impactY;
@@ -488,6 +490,17 @@ Quintus["2D"] = function(Q) {
         entity.trigger("bump.left",col);
         entity.trigger("bump",col);
       }
+
+      /* DONE: Entidades invisibles */
+      const skip_collision = (col.obj.p.skipCollision || false) || (entity.p.skipCollision || false);
+      if(skip_collision){
+        p.x += col.separate[0];
+        p.y += col.separate[1];
+        entity.p.jumping = yv != 0;
+        p.vx = xv;
+        p.vy = yv;
+      }
+
     },
 
     step: function(dt) {

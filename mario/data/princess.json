@@ -1,9 +1,9 @@
 {
-	"bloopa":{
+	"princess": {
 		"sx": 0,
 		"sy": 0,
-		"tileW": 32,
+		"tileW": 30,
 		"tileH": 48,
-		"frames": 2
+		"frames": 1
 	}
 }
