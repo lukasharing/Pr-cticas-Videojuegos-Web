@@ -72,6 +72,8 @@ Q.Sprite.extend("Player", {
     this.del("platformerControls");
     this.end = "dead";
     this.p.skipCollision = true;
+    this.p.vx = 0;
+    this.p.vy = 0;
     Q.audio.stop();
     Q.audio.play("dead");
     this.animate({ vy: -200}, 1.0).chain({}, 1.0, {
